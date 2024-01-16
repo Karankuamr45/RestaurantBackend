@@ -26,4 +26,14 @@ const addRestaurantController=async(req,res)=>{
   }
 }
 
-export {homeController,addRestaurantController}
+
+const getRestaurantController=async(req,res)=>{
+  try {
+    const restaurants=await restaurantModel.find();
+    res.send(restaurants);
+  } catch (error) {
+    console.log(error.message)
+  }
+}
+
+export {homeController,addRestaurantController,getRestaurantController}

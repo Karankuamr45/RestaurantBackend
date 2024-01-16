@@ -1,7 +1,7 @@
 import express from "express";
 import multer from 'multer';
 import path from 'path';
-import { addRestaurantController, homeController } from "../controller/homeController.js";
+import { addRestaurantController, getRestaurantController, homeController } from "../controller/homeController.js";
 const router=express.Router();
 import cloudinary from 'cloudinary';
 
@@ -29,5 +29,7 @@ const storage = multer.diskStorage({
 router.get('/',homeController)  
 
 router.post('/addRestaurant',upload.single('image'),addRestaurantController)
+
+router.get('/getRestaurants',getRestaurantController)
 
 export default router;
