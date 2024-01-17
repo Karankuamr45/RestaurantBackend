@@ -6,7 +6,8 @@ const port=process.env.PORT || 9500;
 const DATABASE_URL=process.env.DATABASE_URL || "mongodb+srv://karan:karan12712@cluster0.z9qdea3.mongodb.net/";
 
 connectdb(DATABASE_URL);
-app.use(express.json())
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 
 app.use('/',router)
 

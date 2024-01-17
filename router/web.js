@@ -1,7 +1,7 @@
 import express from "express";
 import multer from 'multer';
 import path from 'path';
-import { addRestaurantController, getRestaurantController, homeController } from "../controller/homeController.js";
+import { addItemController, addRestaurantController, deleteRestaurantController, getRestaurantController, homeController } from "../controller/homeController.js";
 const router=express.Router();
 import cloudinary from 'cloudinary';
 
@@ -30,6 +30,10 @@ router.get('/',homeController)
 
 router.post('/addRestaurant',upload.single('image'),addRestaurantController)
 
+router.post('/addRestaurant/:id/category/:categoryName/item',upload.single('image'),addItemController)
+
 router.get('/getRestaurants',getRestaurantController)
+
+router.delete('/deleteRestaurant/:restaurantId',deleteRestaurantController)
 
 export default router;
