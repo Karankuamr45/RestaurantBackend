@@ -88,32 +88,163 @@ const getRestaurantController=async(req,res)=>{
   }
 }
 
-const deleteRestaurantController=async(req,res)=>{
+
+const addCategoryController= async (req, res) => {
   try {
+    const restaurantId = req.params.restaurantId;
+    const { categoryName } = req.body;
 
-    const restaurant=await restaurantModel.findById(req.params.restaurantId)
+    // Check if the restaurant exists
+    const existingRestaurant = await restaurantModel.findById(restaurantId);
+    if (!existingRestaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
 
-    const restaurants=await restaurantModel.findByIdAndDelete(req.params.restaurantId);
+    // Create a new category
+    const newCategory = {
+      name: categoryName,
+      items: [], // You can initialize the items array as empty or with default values
+    };
 
-     // Delete the restaurant image from Cloudinary
-     await cloudinary.v2.uploader.destroy(getPublicId(restaurant.image));
+    // Add the new category to the restaurant's categories array
+    existingRestaurant.categories.push(newCategory);
 
-     res.status(200).json({message:"restaurant deleted",restaurants})
+    // Save the updated restaurant document
+    const updatedRestaurant = await existingRestaurant.save();
 
-    
+    res.json({ message: 'Category added successfully', restaurant: updatedRestaurant });
   } catch (error) {
-    console.log(error.message)
-    res.status(500).json({message:"Internal server error"})
-
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal server error' });
   }
 }
 
-const getPublicId = (url) => {
-  const startIndex = url.lastIndexOf('/') + 1;
-  const endIndex = url.lastIndexOf('.');
-  return url.substring(startIndex, endIndex);
+
+
+const deleteItemController= async (req, res) => {
+  try {
+    const itemId = req.params.itemId;
+    const item= await itemModel.findById(itemId);
+    if (!item) {
+      return res.status(404).json({ message: 'Item not found' });
+    }
+
+    // Find the category that contains the item
+    const category = await restaurantModel.findOne({ 'categories.items': itemId });
+
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found for the item' });
+    }
+
+    await itemModel.findByIdAndDelete(itemId);
+
+     // Update the restaurantModel to remove the item from the category's items list
+     await restaurantModel.updateOne(
+      { 'categories.items': itemId },
+      { $pull: { 'categories.$.items': itemId } }
+    );
+
+    // Delete the restaurant image from Cloudinary
+    await cloudinary.v2.uploader.destroy(getPublicId(item?.image));
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+
+const deletecategorywithItemsController= async (req, res) => {
+  try {
+    const categoryId = req.params.categoryId;
+    
+    // Find the category and its items
+    const category = await restaurantModel.findOne({ 'categories._id': categoryId });
+    
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+     // Get the item IDs associated with the category
+     const itemIds = category.categories[0].items.map(item => item._id);
+
+        // Find the items to get their details
+    const items = await itemModel.find({ _id: { $in: itemIds } });
+
+    // Delete the images from Cloudinary for each item
+    for (const item of items) {
+      await cloudinary.v2.uploader.destroy(getPublicId(item.image));
+    }
+
+     // Delete the items from itemModel
+     await itemModel.deleteMany({ _id: { $in: itemIds } });
+
+    // Delete the category and its items
+    await restaurantModel.updateOne(
+      { 'categories._id': categoryId },
+      { $pull: { categories: { _id: categoryId } } }
+    );
+
+    res.json({ message: 'Category deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+}
+
+
+const deleteRestaurantWithEveryThing = async (req, res) => {
+  try {
+    const restaurantId = req.params.restaurantId;
+
+    // Find the restaurant to get its categories and items
+    const restaurant = await restaurantModel.findById(restaurantId);
+
+    // Delete the restaurant image from Cloudinary
+    await cloudinary.v2.uploader.destroy(getPublicId(restaurant.image));
+
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+
+    // Delete the images associated with items in the restaurant
+for (const category of restaurant.categories) {
+  for (const itemId of category.items) {
+    // Find the item in itemModel to get its image information
+    const item = await itemModel.findById(itemId);
+
+    if (item && item.image) {
+      // Delete the image from Cloudinary using the item's public ID
+      await cloudinary.v2.uploader.destroy(getPublicId(item.image));
+    }
+  }
+}
+
+
+    // Delete items from itemModel
+    const itemIds = restaurant.categories.flatMap(category => category.items.map(item => item._id));
+    await itemModel.deleteMany({ _id: { $in: itemIds } });
+
+    // Delete the restaurant and its categories
+    await restaurantModel.findByIdAndDelete(restaurantId);
+
+    res.json({ message: 'Restaurant and associated data deleted successfully' });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
 };
 
 
 
-export {homeController,addRestaurantController,getRestaurantController,deleteRestaurantController,addItemController}
+
+
+const getPublicId = (url) => {
+  const startIndex = url?.lastIndexOf('/') + 1;
+  const endIndex = url?.lastIndexOf('.');
+  return url?.substring(startIndex, endIndex);
+};
+
+
+
+export {homeController,addRestaurantController,getRestaurantController,addItemController,deleteItemController,deletecategorywithItemsController,addCategoryController,deleteRestaurantWithEveryThing}
