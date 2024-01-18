@@ -13,15 +13,7 @@ cloudinary.v2.config({
     api_secret: 'sW1INuTQ2RmfaEHl60k0W5_CW5g',
   });
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, path.join(process.cwd(),'/public/images/'))
-    },
-    filename: function (req, file, cb) {
-      const fileName = Date.now() + '-' + file.originalname
-      cb(null,fileName )
-    }
-  })
+const storage = multer.memoryStorage()
   
   const upload = multer({ storage: storage })
 
@@ -40,7 +32,12 @@ router.delete('/api/deleteItem/:restaurantId/:itemId',deleteItemController);
 // API endpoint to delete a restaurant with categories and items
 router.delete('/api/restaurant/:restaurantId', deleteRestaurantWithEveryThing);
 
+
 router.get('/api/getRestaurants',getRestaurantController)
+
+
+
+
 
 
 export default router;

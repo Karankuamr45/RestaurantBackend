@@ -14,10 +14,9 @@ const restaurantSchema=mongoose.Schema({
         type:Number,
         required:true
     },
-    image:{
-        type:String,
-        required:true
-    },
+    image: {
+      type:String
+      },
     items: [itemSchema],
 
 })
