@@ -1,24 +1,24 @@
 import mongoose from "mongoose";
+import { itemSchema } from "./itemSchema.js";
 
 const restaurantSchema=mongoose.Schema({
     name:{
-        type:String
+        type:String,
+        required:true
     },
-    categories: [
-        {
-          name: String,
-          items: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Item' }],
-        },
-      ],
     description:{
-        type:String
+        type:String,
+        required:true
     },
     rating:{
         type:Number,
+        required:true
     },
     image:{
-        type:String
-    }
+        type:String,
+        required:true
+    },
+    items: [itemSchema],
 
 })
 

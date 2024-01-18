@@ -1,17 +1,25 @@
 import mongoose from 'mongoose';
 
-const itemSchema=mongoose.Schema({
+export const itemSchema=mongoose.Schema({
     name:{
-        type:String
+        type:String,
+        required:true
+    },
+    category:{
+        type:String,
+        required:true
     },
     description:{
-        type:String
+        type:String,
+        required:true
     },
     price:{
-        type:Number
+        type:Number,
+        required:true
     },
     image:{
-        type:String
+        type:String,
+        required:true
     }
 })
 const itemModel=mongoose.model("Item",itemSchema);

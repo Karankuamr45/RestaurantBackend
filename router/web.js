@@ -1,7 +1,7 @@
 import express from "express";
 import multer from 'multer';
 import path from 'path';
-import { addCategoryController, addItemController, addRestaurantController, deleteItemController, deleteRestaurantWithEveryThing, deletecategorywithItemsController, getRestaurantController, homeController } from "../controller/homeController.js";
+import {  addItemController, addRestaurantController, deleteItemController, deleteRestaurantWithEveryThing, getRestaurantController, homeController } from "../controller/homeController.js";
 const router=express.Router();
 import cloudinary from 'cloudinary';
 
@@ -28,24 +28,19 @@ const storage = multer.diskStorage({
 
 router.get('/',homeController)  
 
-router.post('/addRestaurant',upload.single('image'),addRestaurantController)
+// api to add new restaurant
+router.post('/api/addRestaurant',upload.single('image'),addRestaurantController);
 
-router.post('/addRestaurant/:id/category/:categoryName/item',upload.single('image'),addItemController)
-
-router.get('/getRestaurants',getRestaurantController)
-
-// API endpoint to add a category to an existing restaurant
-router.post('/add-category/:restaurantId',addCategoryController)
+// api to add items in a restaurant
+router.post('/api/addItem/:restaurantId',upload.single('image'),addItemController);
 
 // API endpoint to delete an item
-router.delete('/deleteitem/:itemId',deleteItemController);
-
-// API endpoint to delete a category with items
-router.delete('/deletecategory/:categoryId',deletecategorywithItemsController);
+router.delete('/api/deleteItem/:restaurantId/:itemId',deleteItemController);
 
 // API endpoint to delete a restaurant with categories and items
 router.delete('/api/restaurant/:restaurantId', deleteRestaurantWithEveryThing);
 
-// router.delete('/deleteRestaurant/:restaurantId',deleteRestaurantController)
+router.get('/api/getRestaurants',getRestaurantController)
+
 
 export default router;
