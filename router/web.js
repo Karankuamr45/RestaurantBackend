@@ -1,7 +1,7 @@
 import express from "express";
 import multer from 'multer';
 import path from 'path';
-import {  addItemController, addRestaurantController, deleteItemController, deleteRestaurantWithEveryThing, getRestaurantController, homeController } from "../controller/homeController.js";
+import {  addItemController, addRestaurantController, deleteItemController, deleteRestaurantWithEveryThing, getCategoriesAndItems, getRestaurantController, homeController } from "../controller/homeController.js";
 const router=express.Router();
 import cloudinary from 'cloudinary';
 
@@ -30,10 +30,13 @@ router.post('/api/addItem/:restaurantId',upload.single('image'),addItemControlle
 router.delete('/api/deleteItem/:restaurantId/:itemId',deleteItemController);
 
 // API endpoint to delete a restaurant with categories and items
-router.delete('/api/restaurant/:restaurantId', deleteRestaurantWithEveryThing);
+router.delete('/api/deleteRestaurant/:restaurantId', deleteRestaurantWithEveryThing);
 
 
 router.get('/api/getRestaurants',getRestaurantController)
+
+
+router.get('/categoriesAndItems/:restaurantId', getCategoriesAndItems);
 
 
 

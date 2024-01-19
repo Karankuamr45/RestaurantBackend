@@ -60,18 +60,15 @@ const addRestaurantController = async (req, res) => {
 };
 
 
-
-
-
 // API endpoint to add items to a specific category in a restaurant
-const addItemController=async(req,res)=>{
+const addItemController = async (req, res) => {
   try {
     const restaurantId = req.params.restaurantId;
     const { name, category, description, price } = req.body;
 
     // Validate required fields
-    if (!name || !category || !description || !price) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!name || !category || !description || !price || !req.file) {
+      return res.status(400).json({ error: 'All fields and image are required' });
     }
 
     // Validate price to be a positive number
@@ -82,38 +79,45 @@ const addItemController=async(req,res)=>{
 
     // Find the restaurant by ID
     const restaurant = await restaurantModel.findById(restaurantId);
-    
+
     // If restaurant not found
     if (!restaurant) {
       return res.status(404).json({ error: 'Restaurant not found' });
     }
 
-    const result=await cloudinary.v2.uploader.upload(req.file.path)
+    const stream = cloudinary.v2.uploader.upload_stream(async (err, cloudinaryResult) => {
+      if (err) {
+        console.error('Cloudinary upload error:', err);
+        return res.status(500).json({ error: 'Error uploading image to Cloudinary' });
+      }
 
-    const newItem=await itemModel({
-    name:name,
-    category:category,
-    description:description,
-    price:price,
-    image:result.secure_url,
-    })
+      const newItem = new itemModel({
+        name: name,
+        category: category,
+        description: description,
+        price: price,
+        image: cloudinaryResult.secure_url,
+      });
 
-     // Add the item to the restaurant's items array
-     restaurant.items.push(newItem);
+      // Add the item to the restaurant's items array
+      restaurant.items.push(newItem);
 
-     // Save the updated restaurant
-     const updatedRestaurant = await restaurant.save();
+      // Save the updated restaurant
+      const updatedRestaurant = await restaurant.save();
 
-     res.json({ message: 'Item added to the restaurant successfully', restaurant: updatedRestaurant });
+      res.json({ message: 'Item added to the restaurant successfully', restaurant: updatedRestaurant });
+    });
 
-    
-
-    
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
+
+
+
+
 
 
 const getRestaurantController=async (req, res) => {
@@ -121,7 +125,7 @@ const getRestaurantController=async (req, res) => {
     // Retrieve all restaurants from the database
     const restaurants = await restaurantModel.find();
 
-    res.json({ restaurants });
+    res.status(200).json({ restaurants });
   } catch (error) {
     console.error(error.message);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -188,6 +192,9 @@ const deleteRestaurantWithEveryThing =async (req, res) => {
       await cloudinary.v2.uploader.destroy(publicId);
     }
 
+    const restaurantPublicId = restaurant.image.split('/').pop().split('.')[0];
+    await cloudinary.v2.uploader.destroy(restaurantPublicId);
+
     // Delete the restaurant and its items from the database
     await restaurantModel.findByIdAndDelete(restaurantId);
 
@@ -199,7 +206,33 @@ const deleteRestaurantWithEveryThing =async (req, res) => {
 }
 
 
+const getCategoriesAndItems = async (req, res) => {
+  try {
+    const restaurantId = req.params.restaurantId;
+
+    const restaurant = await restaurantModel.findById(restaurantId);
+
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    // Extract unique categories from the items array
+    const categories = [...new Set(restaurant.items.map((item) => item.category))];
+
+    // Prepare a mapping of categories to items
+    const categoriesWithItems = categories.map((category) => ({
+      category,
+      items: restaurant.items.filter((item) => item.category === category),
+    }));
+
+    res.json({ categories: categoriesWithItems });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 
 
-export {homeController,addRestaurantController,getRestaurantController,addItemController,deleteItemController,deleteRestaurantWithEveryThing}
+
+export {homeController,addRestaurantController,getRestaurantController,addItemController,deleteItemController,deleteRestaurantWithEveryThing,getCategoriesAndItems}

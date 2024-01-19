@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import router from './router/web.js';
 import connectdb from './db/connectdb.js';
 const app=express();
@@ -8,6 +9,7 @@ const DATABASE_URL=process.env.DATABASE_URL || "mongodb+srv://karan:karan12712@c
 connectdb(DATABASE_URL);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); 
+app.use(cors())
 
 app.use('/',router)
 
