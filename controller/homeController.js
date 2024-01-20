@@ -217,12 +217,12 @@ const getCategoriesAndItems = async (req, res) => {
     }
 
     // Extract unique categories from the items array
-    const categories = [...new Set(restaurant.items.map((item) => item.category))];
+    const categories = [...new Set(restaurant.items.map((item) => item.category.toLowerCase()))];
 
     // Prepare a mapping of categories to items
     const categoriesWithItems = categories.map((category) => ({
       category,
-      items: restaurant.items.filter((item) => item.category === category),
+      items: restaurant.items.filter((item) => item.category.toLowerCase() === category),
     }));
 
     res.json({ categories: categoriesWithItems });
