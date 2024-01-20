@@ -133,7 +133,7 @@ const getRestaurantController=async (req, res) => {
 }
 
 // Api to delete a specific restaurant item
-const deleteItemController= async (req, res) => {
+const deleteItemController = async (req, res) => {
   try {
     const restaurantId = req.params.restaurantId;
     const itemId = req.params.itemId;
@@ -147,7 +147,7 @@ const deleteItemController= async (req, res) => {
     }
 
     // Find the index of the item in the items array
-    const itemIndex = restaurant.items.findIndex(item => item._id == itemId);
+    const itemIndex = restaurant.items.findIndex((item) => item._id == itemId);
 
     // If item not found
     if (itemIndex === -1) {
@@ -163,6 +163,11 @@ const deleteItemController= async (req, res) => {
     // Remove the item from the items array
     restaurant.items.splice(itemIndex, 1);
 
+    // If the category becomes empty, remove it
+    if (restaurant.items.filter((item) => item.category === restaurant.items[itemIndex].category).length === 0) {
+      restaurant.items = restaurant.items.filter((item) => item.category !== restaurant.items[itemIndex].category);
+    }
+
     // Save the updated restaurant
     const updatedRestaurant = await restaurant.save();
 
@@ -171,7 +176,8 @@ const deleteItemController= async (req, res) => {
     console.error(error.message);
     res.status(500).json({ error: 'Internal Server Error' });
   }
-}
+};
+
 
 
 const deleteRestaurantWithEveryThing =async (req, res) => {
